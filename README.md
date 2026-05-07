@@ -88,6 +88,14 @@ For timers, the important bad sign is a `Sleep(1)` or waitable timer p95 near
 `15.6 ms`. After global timer mode is fixed, remaining `~1.0-2.5 ms` wake
 behavior is normally a good Windows desktop result.
 
+For competitive timer chasing, the target is the lowest supported value reported
+by `NtQueryTimerResolution`. On many gaming PCs that is about `0.5 ms`, so a
+current value around `0.511 ms` is already effectively at the practical minimum.
+The tool now reports `current` vs `lowest supported` directly. If current is not
+at the target, use the Solver flow: `FIX PROC POLICY`, `HOLD 0.5MS`, retest, and
+only use `APPLY GLOBAL MODE` plus reboot when old external tools still sleep at
+`~15.6 ms`.
+
 The GUI has buttons for:
 
 - running the read-only scan without leaving the window

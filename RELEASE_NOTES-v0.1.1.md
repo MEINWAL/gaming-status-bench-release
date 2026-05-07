@@ -18,6 +18,10 @@ Feedback-focused update after the first public release.
 
 ## Timer Improvements
 
+- Added a competitive timer target readout: current timer resolution vs the
+  lowest supported timer resolution reported by `NtQueryTimerResolution`.
+- Added explicit "how to reach the practical minimum" guidance in the report
+  and Solver tab.
 - Renamed the old `Global timer-resolution requests` finding to
   `Legacy global timer mode`.
 - `GlobalTimerResolutionRequests` not being set is no longer shown as a scary
