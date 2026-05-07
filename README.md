@@ -1,6 +1,6 @@
 # Gaming Status Bench
 
-Current release: `v0.1.1`
+Current release: `v0.1.2`
 
 Short version: Gaming Status Bench is a Windows gaming/latency health check. It
 does not promise magic FPS; it finds common setup problems before benchmarking
@@ -29,12 +29,20 @@ It shows:
   jitter
 - an action guide that labels each finding as `KEEP`, `OPTIONAL`, `REVIEW`,
   `SHOULD FIX` or `MUST FIX`, with a concrete next step
+- a fix guide that adds solution steps, command examples, admin/reboot flags
+  and risk notes for important findings
 - BCDEdit values such as `disabledynamictick`, `useplatformclock`,
   `useplatformtick`
 - power plan state
+- power-plan unlocker visibility: hidden Advanced Power Settings count plus
+  `powercfg /qh SCHEME_CURRENT` show-all output
 - GPU/display basics, HAGS and MPO registry state, optional `nvidia-smi`
 - network state: `netsh` TCP/IP output, adapters, RSS/RSC/offload settings,
-  NIC advanced properties, DNS, MTU, ping latency/loss/jitter
+  NIC advanced properties, DNS, local interface MTU, DF-ping path MTU probes,
+  ping latency/loss/jitter
+- optional game ping profiles for CS2, VALORANT, Apex, Call of Duty,
+  Battlefield, Fortnite, Trackmania, Trackmania Nations, Marvel Rivals and
+  Rainbow Six Siege
 - security latency context: VBS / memory integrity where readable
 - common overlay/helper processes
 
@@ -57,6 +65,20 @@ Or run from PowerShell:
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\gaming-status\GamingStatus.ps1 -OpenHtml
 ```
+
+Game-route probes can be added with:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\gaming-status\GamingStatus.ps1 -GamePingProfile cs2,valorant,fortnite -OpenHtml
+```
+
+Known profiles: `cs2`, `valorant`, `apex`, `cod`, `bf6`, `fortnite`,
+`trackmania`, `tracknations`, `marvel-rivals`, `rainbow-six-siege`, or `all`.
+These are route/service probes, not guaranteed exact in-match server pings.
+Fortnite uses Epic's public datacenter ping endpoints; most other games use
+publisher/service endpoints because exact match servers are dynamic or not
+publicly ICMP-pingable. Game profile targets are capped at 3 ping samples per
+target to keep scans from running too long.
 
 For exact per-game FSO checks, pass one or more game exe paths:
 
@@ -114,8 +136,26 @@ The GUI also has a `solver` tab for common timer-state problems:
   `GlobalTimerResolutionRequests=1` for old tools/games that still sleep at
   ~15.6 ms
 - copy recommended timer baseline commands
+- copy full current power plan output with `POWER SHOW ALL`
+- unhide discovered Windows Advanced Power Settings UI entries with
+  `POWER UNHIDE ALL` after explicit admin confirmation
 - optionally apply the BCDEdit timer baseline after an explicit admin
   confirmation
+- disable Windows GameDVR capture/replay buffer for clean benchmark runs
+- enable Windows Game Mode when it is disabled/custom
+- open Windows Captures settings for manual verification
+- select optional game ping profiles for route/service probes
+
+Reports also include a `FixGuide` section. It gives every relevant finding a
+plain fix summary, step order, command examples where a safe command exists,
+and `RequiresAdmin` / `RequiresReboot` / `Risk` fields. The GUI exposes this in
+the `fixes` tab and the `COPY FIXES` button copies command-backed fixes from the
+latest report.
+
+`POWER UNHIDE ALL` only changes visibility attributes under
+`HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerSettings`. It does not change
+active AC/DC power values. Use `POWER SHOW ALL` first, then change actual power
+values one at a time and retest.
 
 ### Notes
 
