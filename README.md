@@ -1,6 +1,6 @@
 # Gaming Status Bench
 
-Current release: `v0.1.2`
+Current release: `v0.1.3`
 
 Short version: Gaming Status Bench is a Windows gaming/latency health check. It
 does not promise magic FPS; it finds common setup problems before benchmarking
@@ -31,11 +31,15 @@ It shows:
   `SHOULD FIX` or `MUST FIX`, with a concrete next step
 - a fix guide that adds solution steps, command examples, admin/reboot flags
   and risk notes for important findings
+- CPU topology checks for visible logical processors, SMT/Hyper-Threading
+  visibility and active `numproc` boot limits
 - BCDEdit values such as `disabledynamictick`, `useplatformclock`,
   `useplatformtick`
 - power plan state
 - power-plan unlocker visibility: hidden Advanced Power Settings count plus
   `powercfg /qh SCHEME_CURRENT` show-all output
+- USB controller/device power-saving state, including registry fallback checks
+  when the WMI backend is unavailable
 - GPU/display basics, HAGS and MPO registry state, optional `nvidia-smi`
 - network state: `netsh` TCP/IP output, adapters, RSS/RSC/offload settings,
   NIC advanced properties, DNS, local interface MTU, DF-ping path MTU probes,
@@ -145,12 +149,17 @@ The GUI also has a `solver` tab for common timer-state problems:
 - enable Windows Game Mode when it is disabled/custom
 - open Windows Captures settings for manual verification
 - select optional game ping profiles for route/service probes
+- review CPU scheduler state, use `CPU RESTORE` for unintended `numproc` caps,
+  and only allow `CPU SET 16` when the latest report confirms a safe target
+- apply `USB POWER SAVE OFF` for strict input-latency benchmark profiles
 
 Reports also include a `FixGuide` section. It gives every relevant finding a
 plain fix summary, step order, command examples where a safe command exists,
 and `RequiresAdmin` / `RequiresReboot` / `Risk` fields. The GUI exposes this in
 the `fixes` tab and the `COPY FIXES` button copies command-backed fixes from the
-latest report.
+latest report. JSON fix fields such as `FixSteps` and `FixCommands` are emitted
+as arrays, including empty or single-item cases, so downstream tools can parse
+them consistently.
 
 `POWER UNHIDE ALL` only changes visibility attributes under
 `HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerSettings`. It does not change
