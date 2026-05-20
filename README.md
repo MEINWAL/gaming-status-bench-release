@@ -1,6 +1,10 @@
 # Gaming Status Bench
 
-Current release: `v0.1.3`
+Current release: `v0.1.4`
+
+A transparent Windows gaming diagnostics bench for CPU, USB, timers, network,
+display/GPU and latency-critical system state. No installer. No EXE wrapper.
+Readable PowerShell. SHA256 verified.
 
 Short version: Gaming Status Bench is a Windows gaming/latency health check. It
 does not promise magic FPS; it finds common setup problems before benchmarking
@@ -41,6 +45,13 @@ It shows:
 - USB controller/device power-saving state, including registry fallback checks
   when the WMI backend is unavailable
 - GPU/display basics, HAGS and MPO registry state, optional `nvidia-smi`
+- Display/GPU cleanup separates real active display outputs from basic or
+  incomplete WMI adapters so phantom `x@Hz` rows do not become top-level action
+  items
+- network lite report: NIC name, driver model hint, driver version, link speed,
+  global RSS state, adapter RSS visibility, interrupt moderation, EEE/Green
+  Ethernet, power-saving flags, offload summary and a safe
+  `OK`/`REVIEW`/`MANUAL TEST` recommendation
 - network state: `netsh` TCP/IP output, adapters, RSS/RSC/offload settings,
   NIC advanced properties, DNS, local interface MTU, DF-ping path MTU probes,
   ping latency/loss/jitter
@@ -148,6 +159,9 @@ The GUI also has a `solver` tab for common timer-state problems:
 - disable Windows GameDVR capture/replay buffer for clean benchmark runs
 - enable Windows Game Mode when it is disabled/custom
 - open Windows Captures settings for manual verification
+- run `NET REFRESH` as an explicit pre-game action:
+  `ipconfig /release`, wait 6 seconds, `ipconfig /renew`, wait 6 seconds,
+  then `ipconfig /flushdns`; this briefly disconnects networking
 - select optional game ping profiles for route/service probes
 - review CPU scheduler state, use `CPU RESTORE` for unintended `numproc` caps,
   and only allow `CPU SET 16` when the latest report confirms a safe target
@@ -160,6 +174,51 @@ the `fixes` tab and the `COPY FIXES` button copies command-backed fixes from the
 latest report. JSON fix fields such as `FixSteps` and `FixCommands` are emitted
 as arrays, including empty or single-item cases, so downstream tools can parse
 them consistently.
+
+Reports include a `ReportSchemaVersion` and a `ReportContract` section. The
+contract documents array-shaped JSON fields and Display/GPU reporting rules so
+external parsers can treat the report as structured data instead of scraping
+HTML or console output.
+
+Diagnosis and commands are separated in the report:
+
+- `Analysis.DiagnosisGuide` is read-only diagnosis and recommended next action.
+- `Analysis.CommandGuide` contains only command-backed fixes, including the
+  diagnostic value/note that justified each command group.
+- `Findings[].FixCommands` remains for backward compatibility with older
+  tooling.
+
+The package also includes:
+
+- `VERIFY.ps1` for local package checks and optional ZIP/SHA256 verification
+- `sample-report.json` as a small, sanitized schema/example report
+- `PRIVACY.md` describing what the tool reads, what it writes and what to check
+  before sharing reports
+
+### Build A Release Package
+
+The release ZIP is built from a fixed file list. To create the same local
+package layout used for GitHub releases, run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\tools\release\Build-GamingStatusRelease.ps1 -Version 0.1.4
+```
+
+The build script validates PowerShell syntax, version strings, README/release
+notes text, ZIP contents and SHA256 output. It only writes to `dist\`; it does
+not push Git commits or publish a GitHub release.
+
+After extracting a release ZIP, run:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\VERIFY.ps1
+```
+
+To verify a downloaded ZIP against its checksum file:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\VERIFY.ps1 -ZipPath ..\GamingStatusBench-v0.1.4.zip -Sha256Path ..\GamingStatusBench-v0.1.4.zip.sha256.txt
+```
 
 `POWER UNHIDE ALL` only changes visibility attributes under
 `HKLM\SYSTEM\CurrentControlSet\Control\Power\PowerSettings`. It does not change
